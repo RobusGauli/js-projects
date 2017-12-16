@@ -4,12 +4,14 @@ const Right = x => ({
   map: f => Right(f(x)),
   inspect: () => console.log(`Right(${x})`),
   fold: (f, g) => g(x),
+  chain: f => f(x),
 });
 
 const Left = x => ({
   map: f => Left(x),
   inspect: () => console.log(`Left(${x})`),
   fold: (f, g) => f(x),
+  chain: f => Left(x), //we dont do anyoperation if there is a Leftalready no matter what
 });
 
 //Either = Left || Right
@@ -44,8 +46,10 @@ const tryCatch = f => {
 }
 
 const getPortTwo = () =>
-  tryCatch(f => fs.readFileSync('config.json'))
-  .map(buffer => JSON.parse(buffer))
+  tryCatch(() => fs.readFileSync('config.json'))
+  //chain remove the pushes up from the Right(Left(x)) -> Left(x)
+  .chain(buffer => tryCatch(() => JSON.parse(buffer))) // Right(Left(x)) but we want just Left(x) so we use chain 
+  //chain simply extract the value on deep down
   .fold(() => console.log('Error'),
         parsedJson => console.log(parsedJson['port']))
 
